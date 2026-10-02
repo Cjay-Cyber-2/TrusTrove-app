@@ -293,17 +293,30 @@ export default function ProfilePage() {
 
         {/* Registration / Update Modal */}
         {showRegModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+          <div
+            ref={modalRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="registration-dialog-title"
+            tabIndex={-1}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
+          >
             <div
-              ref={modalRef}
               className="bg-[#0d131a] border border-border rounded-lg p-6 md:p-8 max-w-lg w-full space-y-6 shadow-2xl relative max-h-[90vh] overflow-y-auto"
             >
               <div className="flex items-center justify-between border-b border-border/40 pb-4">
-                <h2 className="text-base font-bold font-mono text-white uppercase tracking-wider">
-                  {profile ? "Update Profile Metadata" : "Register Corporate Profile"}
+                <h2
+                  id="registration-dialog-title"
+                  className="text-base font-bold font-mono text-white uppercase tracking-wider"
+                >
+                  {profile
+                    ? "Update Profile Metadata"
+                    : "Register Corporate Profile"}
                 </h2>
                 <button
+                  type="button"
                   onClick={() => setShowRegModal(false)}
+                  aria-label="Close registration dialog"
                   className="text-slate-400 hover:text-white font-mono text-sm"
                 >
                   ✕
