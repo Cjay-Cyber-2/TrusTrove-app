@@ -191,7 +191,8 @@ export default function ProfilePage() {
                       {profile.role === "issuer" ? "SME / Issuer" : "Buyer"} Profile
                     </h2>
                     <p className="text-xs font-mono text-slate-400 mt-1">
-                      Registered on Registry Contract • Address: {formatAddress(address)}
+                      Registered on Registry Contract • Address:{" "}
+                      {address ? formatAddress(address) : "Address unavailable"}
                     </p>
                   </div>
                 </div>
@@ -436,10 +437,9 @@ export default function ProfilePage() {
 
         {/* Transaction Pending Modal */}
         <TransactionPending
-          open={showPending}
+          isOpen={showPending}
           onClose={() => setShowPending(false)}
-          title={profile ? "Updating Profile..." : "Registering Profile..."}
-          description={pendingText}
+          statusText={pendingText}
           txHash={pendingHash}
         />
       </div>
