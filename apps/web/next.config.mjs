@@ -1,6 +1,9 @@
 import { config as loadDotenv } from "dotenv";
 import { existsSync } from "node:fs";
 import path from "node:path";
+import createNextIntlPlugin from "next-intl/plugin";
+import createBundleAnalyzer from "@next/bundle-analyzer";
+import { buildSecurityHeaders } from "./lib/security-headers.mjs";
 
 // The root README's Quick Start has contributors run `cp .env.example
 // .env.local` at the repo root so the web app and the Go indexer share one
@@ -18,6 +21,29 @@ for (const file of [".env", ".env.local"]) {
 }
 
 /** @type {import('next').NextConfig} */
-const nextConfig = {};
+const nextConfig = {
+  output: "standalone",
+  poweredByHeader: false,
+  // Static hardening headers for every route. The Content-Security-Policy is
+  // set per request in middleware.ts because it carries a nonce. See
+  // docs/developer-guide/security-headers.md.
+  async headers() {
+    return buildSecurityHeaders({
+      isProduction: process.env.NODE_ENV === "production",
+    });
+  },
+};
 
-export default nextConfig;
+const withNextIntl = createNextIntlPlugin("./i18n/request.ts");
+
+// Opt-in bundle analysis: `pnpm --filter web analyze`, or any build run with
+// ANALYZE=true, writes client/nodejs/edge treemaps to apps/web/.next/analyze.
+// Disabled otherwise, so ordinary `next build` / `next dev` runs are unchanged.
+// Set ANALYZE_OPEN=true to have the reports opened in a browser.
+// See docs/developer-guide/local-setup.md.
+const withBundleAnalyzer = createBundleAnalyzer({
+  enabled: process.env.ANALYZE === "true",
+  openAnalyzer: process.env.ANALYZE_OPEN === "true",
+});
+
+export default withBundleAnalyzer(withNextIntl(nextConfig));
