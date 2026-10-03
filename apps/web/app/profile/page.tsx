@@ -188,7 +188,8 @@ export default function ProfilePage() {
                       </span>
                     </div>
                     <h2 className="text-lg font-bold font-mono text-white mt-0.5">
-                      {profile.role === "issuer" ? "SME / Issuer" : "Buyer"} Profile
+                      {profile.role === "issuer" ? "SME / Issuer" : "Buyer"}{" "}
+                      Profile
                     </h2>
                     <p className="text-xs font-mono text-slate-400 mt-1">
                       Registered on Registry Contract • Address:{" "}
@@ -232,7 +233,9 @@ export default function ProfilePage() {
                     <div className="flex justify-between py-2 border-b border-border/40">
                       <span className="text-slate-500">Registered At</span>
                       <span className="text-slate-300">
-                        {new Date(profile.registeredAt * 1000).toLocaleDateString()}
+                        {new Date(
+                          profile.registeredAt * 1000,
+                        ).toLocaleDateString()}
                       </span>
                     </div>
                   </div>
@@ -247,20 +250,31 @@ export default function ProfilePage() {
                     <div className="flex justify-between py-2 border-b border-border/40">
                       <span className="text-slate-500">On-Chain Status</span>
                       <span
-                        className={isVerified ? "text-emerald-400 font-bold" : "text-amber-400 font-bold"}
+                        className={
+                          isVerified
+                            ? "text-emerald-400 font-bold"
+                            : "text-amber-400 font-bold"
+                        }
                       >
                         {isVerified ? "Verified" : "Unverified"}
                       </span>
                     </div>
                     <div className="flex justify-between py-2 border-b border-border/40">
                       <span className="text-slate-500">Registry Contract</span>
-                      <span className="text-slate-300 truncate max-w-[180px]" title={registryContractID}>
-                        {registryContractID ? formatAddress(registryContractID) : "Not Configured"}
+                      <span
+                        className="text-slate-300 truncate max-w-[180px]"
+                        title={registryContractID}
+                      >
+                        {registryContractID
+                          ? formatAddress(registryContractID)
+                          : "Not Configured"}
                       </span>
                     </div>
                     <div className="flex justify-between py-2 border-b border-border/40">
                       <span className="text-slate-500">Network</span>
-                      <span className="text-slate-300 uppercase">Stellar Testnet</span>
+                      <span className="text-slate-300 uppercase">
+                        Stellar Testnet
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -277,8 +291,9 @@ export default function ProfilePage() {
                   No Business Profile Found
                 </h2>
                 <p className="text-xs font-mono text-slate-400 leading-relaxed">
-                  Your connected wallet is not yet registered on the TrusTrove Registry contract.
-                  Register as an SME Issuer to tokenize invoices or as a Buyer to verify and settle them.
+                  Your connected wallet is not yet registered on the TrusTrove
+                  Registry contract. Register as an SME Issuer to tokenize
+                  invoices or as a Buyer to verify and settle them.
                 </p>
               </div>
               <Button
@@ -301,9 +316,7 @@ export default function ProfilePage() {
             tabIndex={-1}
             className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
           >
-            <div
-              className="bg-[#0d131a] border border-border rounded-lg p-6 md:p-8 max-w-lg w-full space-y-6 shadow-2xl relative max-h-[90vh] overflow-y-auto"
-            >
+            <div className="bg-[#0d131a] border border-border rounded-lg p-6 md:p-8 max-w-lg w-full space-y-6 shadow-2xl relative max-h-[90vh] overflow-y-auto">
               <div className="flex items-center justify-between border-b border-border/40 pb-4">
                 <h2
                   id="registration-dialog-title"
