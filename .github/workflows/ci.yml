@@ -65,9 +65,8 @@ jobs:
         with:
           name: sdk-coverage-report
           path: |
-            packages/sdk/coverage
-            packages/sdk/coverage/lcov.info
-          if-no-files-found: warn
+            packages/sdk/coverage/
+          if-no-files-found: ignore
 
       - name: Lint Web Application
         run: pnpm --filter web lint
