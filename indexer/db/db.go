@@ -56,6 +56,9 @@ func WithTx(ctx context.Context, fn func(tx pgx.Tx) error) error {
 	return nil
 }
 
+// InitDBFunc allows tests to override database initialization without a real PostgreSQL server.
+var InitDBFunc = InitDB
+
 func InitDB(ctx context.Context, databaseURL string) error {
 	config, err := pgxpool.ParseConfig(databaseURL)
 	if err != nil {

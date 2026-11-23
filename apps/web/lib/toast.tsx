@@ -1,8 +1,8 @@
 import type { ReactNode } from "react";
 import { toast } from "sonner";
+import { explorerTxUrl } from "@/lib/explorer";
 
-const explorerUrl = (txHash: string) =>
-  `https://stellar.expert/explorer/testnet/tx/${txHash}`;
+const explorerUrl = (txHash: string) => explorerTxUrl(txHash);
 
 function ToastAnnouncement({
   variant,

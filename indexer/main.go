@@ -71,10 +71,16 @@ func exitCodeFor(cause shutdownCause) int {
 func main() {
 	// run() returns the exit status so deferred functions (sentry.Flush, the
 	// context cancel) always execute before os.Exit.
-	os.Exit(run())
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	err := run(ctx, nil)
+	if err != nil {
+		os.Exit(exitFailure)
+}
+	os.Exit(exitSuccess)
 }
 
-func run() int {
+func run(ctx context.Context, injectedCfg *config.Config) error {
 	// Configure default slog JSON logging format
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
 		Level: slog.LevelInfo,
@@ -84,10 +90,16 @@ func run() int {
 	slog.Info("Starting TrusTrove Indexer and API server...")
 
 	// 1. Load Configuration
-	cfg, err := config.LoadConfig()
+	var cfg *config.Config
+	var err error
+	if injectedCfg != nil {
+		cfg = injectedCfg
+	} else {
+		cfg, err = config.LoadConfig()
 	if err != nil {
 		slog.Error("Failed to load configuration", "error", err)
-		return exitFailure
+		return err
+	}
 	}
 
 	// Log secret sources for transparency (never log the secrets themselves)
@@ -119,12 +131,21 @@ func run() int {
 	}
 
 	// 2. Initialize DB Connection Pool
-	ctx, cancel := context.WithCancel(context.Background())
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	if err := db.InitDB(ctx, cfg.DatabaseURL); err != nil {
+	var initErr error
+	if db.InitDBFunc != nil {
+		initErr = db.InitDBFunc(ctx, cfg.DatabaseURL)
+	} else {
+		initErr = db.InitDB(ctx, cfg.DatabaseURL)
+	}
+	if initErr != nil {
 		slog.Error("Failed to initialize database", "error", err)
-		return exitFailure
+		return initErr
 	}
 	slog.Info("Database connection and migrations successfully verified")
 
@@ -132,7 +153,7 @@ func run() int {
 	handler, err := api.NewAPIHandler(cfg)
 	if err != nil {
 		slog.Error("Failed to initialize API handler", "error", err)
-		return exitFailure
+		return err
 	}
 
 	router, stopRouter := api.NewRouter(handler)
@@ -244,5 +265,8 @@ func run() int {
 	shutdown(cause)
 
 	slog.Info("TrusTrove Indexer and API server stopped.", "exitCode", code)
-	return code
+	if code != exitSuccess {
+		return errors.New(string(cause))
+	}
+	return nil
 }

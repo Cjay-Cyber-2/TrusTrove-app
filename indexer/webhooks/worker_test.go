@@ -1,6 +1,7 @@
 package webhooks
 
 import (
+	"testing"
 	"bytes"
 	"context"
 	"crypto/hmac"
@@ -15,11 +16,10 @@ import (
 	"strings"
 	"sync"
 	"sync/atomic"
-	"testing"
 	"time"
-
 	"trusttrove/indexer/db"
 )
+
 
 // fakeDelivery builds an in-memory claimed row. The worker only reads these
 // fields when attempting, so no database is needed to exercise the pool.
@@ -530,5 +530,42 @@ func TestDeliveryWorkerFullFlowViaAttemptSeam(t *testing.T) {
 				t.Errorf("delivery %d retry backoff: got %v, want %v", d.ID, res.retryBackoff, wantBackoff)
 			}
 		}
+	}
+}
+func TestRedactURL(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    string
+		expected string
+	}{
+		{
+			name:     "simple url with path token",
+			input:    "https://example.com/hooks/T000/B000/secrettoken",
+			expected: "https://example.com/hooks/T000/B000/***",
+		},
+		{
+			name:     "url with query params",
+			input:    "https://example.com/webhook?token=secret123&key=abc",
+			expected: "https://example.com/webhook",
+		},
+		{
+			name:     "url with userinfo",
+			input:    "https://user:password@example.com/path/secret",
+			expected: "https://example.com/path/***",
+		},
+		{
+			name:     "invalid url",
+			input:    "://invalid-url",
+			expected: "://invalid-url",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := redactURL(tt.input)
+			if got != tt.expected {
+				t.Errorf("redactURL(%q) = %q, want %q", tt.input, got, tt.expected)
+			}
+		})
 	}
 }

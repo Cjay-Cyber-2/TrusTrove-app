@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { useTxHistory, isRateLimitError } from "@/hooks/useTxHistory";
 import { SkeletonShimmer } from "./SkeletonLoader";
+import { explorerTxUrl } from "@/lib/explorer";
 
 interface TxHistoryProps {
   address: string;
@@ -60,7 +61,7 @@ export function TxHistory({ address }: TxHistoryProps) {
   };
 
   const getStellarExpertUrl = (hash: string) => {
-    return `https://stellar.expert/explorer/testnet/tx/${hash}`;
+    return explorerTxUrl(hash);
   };
 
   return (
