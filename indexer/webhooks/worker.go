@@ -2,6 +2,9 @@ package webhooks
 
 import (
 	"bytes"
+	"errors"
+	"net/url"
+	"strings"
 	"context"
 	"crypto/hmac"
 	"crypto/sha256"
@@ -203,7 +206,14 @@ func (w *DeliveryWorker) attemptDelivery(ctx context.Context, delivery *db.Webho
 
 	resp, err := w.client.Do(req)
 	if err != nil {
-		w.handleFailure(ctx, delivery, nil, fmt.Sprintf("http: %v", err))
+		var urlErr *net/url.Error
+		var errString string
+		if errors.As(err, &urlErr) {
+			errString = fmt.Sprintf("http: %v", urlErr.Err)
+		} else {
+			errString = fmt.Sprintf("http: %v", err)
+		}
+		w.handleFailure(ctx, delivery, nil, errString)
 		return
 	}
 	defer resp.Body.Close()
@@ -218,7 +228,7 @@ func (w *DeliveryWorker) attemptDelivery(ctx context.Context, delivery *db.Webho
 			slog.Error("webhook worker: mark success failed", "delivery_id", delivery.ID, "error", dbErr)
 		}
 		api.WebhookDeliveriesTotal.WithLabelValues("delivered").Inc()
-		slog.Info("webhook worker: delivered", "delivery_id", delivery.ID, "endpoint", delivery.EndpointURL, "status", resp.StatusCode)
+		slog.Info("webhook worker: delivered", "delivery_id", delivery.ID, "endpoint", redactURL(delivery.EndpointURL), "status", resp.StatusCode)
 		return
 	}
 
@@ -235,7 +245,7 @@ func (w *DeliveryWorker) handleFailure(ctx context.Context, delivery *db.Webhook
 		"delivery_id", delivery.ID,
 		"attempt", nextAttempt,
 		"max_attempts", delivery.MaxAttempts,
-		"endpoint", delivery.EndpointURL,
+		"endpoint", redactURL(delivery.EndpointURL),
 		"error", errMsg,
 	)
 
@@ -244,7 +254,7 @@ func (w *DeliveryWorker) handleFailure(ctx context.Context, delivery *db.Webhook
 			slog.Error("webhook worker: mark dead_letter failed", "delivery_id", delivery.ID, "error", err)
 		}
 		api.WebhookDeliveriesTotal.WithLabelValues("dead_lettered").Inc()
-		slog.Error("webhook worker: delivery dead-lettered", "delivery_id", delivery.ID, "endpoint", delivery.EndpointURL)
+		slog.Error("webhook worker: delivery dead-lettered", "delivery_id", delivery.ID, "endpoint", redactURL(delivery.EndpointURL))
 		return
 	}
 
@@ -262,6 +272,25 @@ func (w *DeliveryWorker) handleFailure(ctx context.Context, delivery *db.Webhook
 const (
 	backoffBase = 10 * time.Second
 )
+
+func redactURL(raw string) string {
+	u, err := url.Parse(raw)
+	if err != nil {
+		return raw
+	}
+	u.User = nil
+	u.RawQuery = ""
+	u.Fragment = ""
+	path := u.Path
+	if path != "" && path != "/" {
+		parts := strings.Split(path, "/")
+		if len(parts) > 0 && parts[len(parts)-1] != "" {
+			parts[len(parts)-1] = "***"
+			u.Path = strings.Join(parts, "/")
+		}
+	}
+	return u.String()
+}
 
 // sign returns the HMAC-SHA256 hex digest of "<timestamp>.<payload>".
 func sign(secret, timestamp string, payload []byte) string {
