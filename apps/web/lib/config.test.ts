@@ -55,6 +55,16 @@ describe("config helpers", () => {
     );
   });
 
+  it("does not use dynamic process.env lookup expressions", async () => {
+    const fs = await import("fs");
+    const path = await import("path");
+    const configSource = fs.readFileSync(
+      path.resolve(__dirname, "config.ts"),
+      "utf8",
+    );
+    expect(configSource).not.toContain("process.env[");
+  });
+
   it("caches the validation result on subsequent calls", async () => {
     process.env.NEXT_PUBLIC_INVOICE_CONTRACT_ID = "C123";
     process.env.NEXT_PUBLIC_POOL_CONTRACT_ID = "C456";

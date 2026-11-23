@@ -20,6 +20,7 @@ import {
   truncateTxHash,
   type TimelineStepKey,
 } from "@/lib/invoiceTimeline";
+import { explorerTxUrl } from "@/lib/explorer";
 
 interface InvoiceStatusTimelineProps {
   invoice: Invoice;
@@ -131,7 +132,7 @@ export function InvoiceStatusTimeline({ invoice }: InvoiceStatusTimelineProps) {
                 <Clock3 className="h-3 w-3 shrink-0" />
                 {txHash ? (
                   <a
-                    href={`https://stellar.expert/explorer/testnet/tx/${txHash}`}
+                    href={explorerTxUrl(txHash)}
                     target="_blank"
                     rel="noreferrer"
                     className="inline-flex min-w-0 items-center gap-1 text-teal-300 transition-colors hover:text-teal-200"

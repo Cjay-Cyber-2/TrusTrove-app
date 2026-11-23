@@ -40,8 +40,16 @@ let cachedValidation: ConfigValidation | null = null;
 export function validateConfig(): ConfigValidation {
   if (cachedValidation) return cachedValidation;
 
+  const envValues: Record<string, string | undefined> = {
+    NEXT_PUBLIC_INVOICE_CONTRACT_ID:
+      process.env.NEXT_PUBLIC_INVOICE_CONTRACT_ID,
+    NEXT_PUBLIC_POOL_CONTRACT_ID: process.env.NEXT_PUBLIC_POOL_CONTRACT_ID,
+    NEXT_PUBLIC_REGISTRY_CONTRACT_ID:
+      process.env.NEXT_PUBLIC_REGISTRY_CONTRACT_ID,
+  };
+
   const missing = REQUIRED_ENV_VARS.filter(
-    (key) => !process.env[key] || process.env[key] === "",
+    (key) => !envValues[key] || envValues[key] === "",
   );
 
   if (missing.length > 0) {
